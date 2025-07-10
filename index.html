@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tech for Girls Registration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f9f9ff;
+    }
+    h1 {
+      text-align: center;
+      color: #ff4081;
+    }
+    form {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background: #ff4081;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    #message {
+      text-align: center;
+      margin-top: 20px;
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tech for Girls Registration</h1>
+  <form id="regForm">
+    <input type="text" id="name" placeholder="Name" required />
+    <input type="number" id="phone" placeholder="Phone Number" required />
+    <input type="email" id="email" placeholder="Email ID" required />
+    <input type="text" id="college" placeholder="College/Department" required />
+
+    <button type="button" id="whatsappBtn">Share on WhatsApp</button>
+    <p id="counter">Click count: 0/5</p>
+
+    <input type="file" id="screenshot" accept="image/*" required />
+
+    <button type="submit" id="submitBtn" disabled>Submit Registration</button>
+  </form>
+  <p id="message"></p>
+
+  <script>
+    let clickCount = 0;
+    const counterEl = document.getElementById("counter");
+    const whatsappBtn = document.getElementById("whatsappBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const form = document.getElementById("regForm");
+    const messageEl = document.getElementById("message");
+
+    // Disable form if already submitted
+    if (localStorage.getItem("submitted")) {
+      form.querySelectorAll("input, button").forEach(el => el.disabled = true);
+      messageEl.textContent = "🎉 Your submission has been recorded. Thanks for being part of Tech for Girls!";
+    }
+
+    whatsappBtn.addEventListener("click", () => {
+      if (clickCount < 5) {
+        clickCount++;
+        const text = encodeURIComponent("Hey Buddy, Join Tech For Girls Community");
+        const link = `https://wa.me/?text=${text}`;
+        window.open(link, "_blank");
+        counterEl.textContent = `Click count: ${clickCount}/5`;
+        if (clickCount >= 5) {
+          counterEl.textContent = "Sharing complete. Please continue.";
+          submitBtn.disabled = false;
+        }
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (clickCount < 5) {
+        alert("Please complete sharing before submitting!");
+        return;
+      }
+
+      const name = document.getElementById("name").value;
+      const phone = document.getElementById("phone").value;
+      const email = document.getElementById("email").value;
+      const college = document.getElementById("college").value;
+      const fileInput = document.getElementById("screenshot");
+      const file = fileInput.files[0];
+
+      // Upload file to Google Drive or elsewhere if needed
+      // For now, we'll just get file name
+      let screenshotLink = file ? file.name : "No file";
+
+      // Send data to Google Sheets Web App endpoint
+      const scriptURL = "https://script.google.com/macros/s/AKfycbwk_LPnfpuEMQAbJxZvIeKvUdZ_H16ShLlACxKo1ChbtJ9pevocO7UUe4mzWYm_DBdJBQ/exec"; // Replace with your Web App URL
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('phone', phone);
+      formData.append('email', email);
+      formData.append('college', college);
+      formData.append('screenshot', screenshotLink);
+
+      try {
+        await fetch(scriptURL, { method: 'POST', body: formData });
+        messageEl.textContent = "🎉 Your submission has been recorded. Thanks for being part of Tech for Girls!";
+        form.querySelectorAll("input, button").forEach(el => el.disabled = true);
+        localStorage.setItem("submitted", "true");
+      } catch (error) {
+        alert("Error submitting form. Please try again.");
+      }
+    });
+  </script>
+</body>
+</html>
